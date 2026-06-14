@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Send, Plus, CreditCard, Smartphone, Settings, LogOut, ArrowUpRight, ArrowDownLeft, TrendingUp, Bell, X, Menu, Home, Zap, Lock, Mail, User, Phone } from 'lucide-react';
 
 export default function AmimBank() {
+  const TRANSACOES_INICIAIS = [
+    { id: 1, tipo: 'entrada', descricao: 'Salário Mensal', valor: 3500.00, data: '2024-01-15', hora: '08:30', categoria: 'Crédito' },
+    { id: 2, tipo: 'saida', descricao: 'Restaurante Sabor', valor: 89.90, data: '2024-01-14', hora: '19:45', categoria: 'Alimentação', icon: '🍽️' },
+    { id: 3, tipo: 'saida', descricao: 'Spotify Assinatura', valor: 16.90, data: '2024-01-13', hora: '10:15', categoria: 'Assinatura', icon: '🎵' },
+    { id: 4, tipo: 'entrada', descricao: 'PIX Recebido', valor: 250.00, data: '2024-01-12', hora: '14:20', categoria: 'Transferência', icon: '💳' },
+    { id: 5, tipo: 'saida', descricao: 'Uber para Centro', valor: 34.50, data: '2024-01-12', hora: '18:10', categoria: 'Transporte', icon: '🚗' },
+    { id: 6, tipo: 'saida', descricao: 'Farmácia Genéricos', valor: 127.35, data: '2024-01-11', hora: '16:00', categoria: 'Saúde', icon: '💊' },
+  ];
+
   // ===== ESTADOS DE AUTENTICAÇÃO =====
   const [estaAutenticado, setEstaAutenticado] = useState(false);
   const [usuarioLogado, setUsuarioLogado] = useState(null);
@@ -54,7 +63,6 @@ export default function AmimBank() {
   // ===== EFEITOS =====
   useEffect(() => {
     verificarAutenticacao();
-    inicializarTransacoes();
   }, []);
 
   // ===== FUNÇÕES DE AUTENTICAÇÃO =====
@@ -74,28 +82,9 @@ export default function AmimBank() {
     if (transacoesSalvas) {
       setTransacoes(JSON.parse(transacoesSalvas));
     } else {
-      const transacoesInicial = [
-        { id: 1, tipo: 'entrada', descricao: 'Salário Mensal', valor: 3500.00, data: '2024-01-15', hora: '08:30', categoria: 'Crédito' },
-        { id: 2, tipo: 'saida', descricao: 'Restaurante Sabor', valor: 89.90, data: '2024-01-14', hora: '19:45', categoria: 'Alimentação', icon: '🍽️' },
-        { id: 3, tipo: 'saida', descricao: 'Spotify Assinatura', valor: 16.90, data: '2024-01-13', hora: '10:15', categoria: 'Assinatura', icon: '🎵' },
-        { id: 4, tipo: 'entrada', descricao: 'PIX Recebido', valor: 250.00, data: '2024-01-12', hora: '14:20', categoria: 'Transferência', icon: '💳' },
-        { id: 5, tipo: 'saida', descricao: 'Uber para Centro', valor: 34.50, data: '2024-01-12', hora: '18:10', categoria: 'Transporte', icon: '🚗' },
-        { id: 6, tipo: 'saida', descricao: 'Farmácia Genéricos', valor: 127.35, data: '2024-01-11', hora: '16:00', categoria: 'Saúde', icon: '💊' },
-      ];
-      setTransacoes(transacoesInicial);
+      setTransacoes(TRANSACOES_INICIAIS);
+      localStorage.setItem(`amim_transacoes_${usuarioId}`, JSON.stringify(TRANSACOES_INICIAIS));
     }
-  };
-
-  const inicializarTransacoes = () => {
-    const transacoesInicial = [
-      { id: 1, tipo: 'entrada', descricao: 'Salário Mensal', valor: 3500.00, data: '2024-01-15', hora: '08:30', categoria: 'Crédito' },
-      { id: 2, tipo: 'saida', descricao: 'Restaurante Sabor', valor: 89.90, data: '2024-01-14', hora: '19:45', categoria: 'Alimentação', icon: '🍽️' },
-      { id: 3, tipo: 'saida', descricao: 'Spotify Assinatura', valor: 16.90, data: '2024-01-13', hora: '10:15', categoria: 'Assinatura', icon: '🎵' },
-      { id: 4, tipo: 'entrada', descricao: 'PIX Recebido', valor: 250.00, data: '2024-01-12', hora: '14:20', categoria: 'Transferência', icon: '💳' },
-      { id: 5, tipo: 'saida', descricao: 'Uber para Centro', valor: 34.50, data: '2024-01-12', hora: '18:10', categoria: 'Transporte', icon: '🚗' },
-      { id: 6, tipo: 'saida', descricao: 'Farmácia Genéricos', valor: 127.35, data: '2024-01-11', hora: '16:00', categoria: 'Saúde', icon: '💊' },
-    ];
-    setTransacoes(transacoesInicial);
   };
 
   // Validação CPF
@@ -136,7 +125,7 @@ export default function AmimBank() {
     const usuariosStr = localStorage.getItem('amim_usuarios');
     if (!usuariosStr) return false;
     const usuarios = JSON.parse(usuariosStr);
-    return usuarios.some(u => u.email === email);
+    return usuarios.some(u => u.email === email.trim().toLowerCase());
   };
 
   // Fazer Cadastro
@@ -176,7 +165,7 @@ export default function AmimBank() {
     const novoUsuario = {
       id: Date.now(),
       nome: formCadastro.nome,
-      email: formCadastro.email,
+      email: formCadastro.email.trim().toLowerCase(),
       cpf: formCadastro.cpf,
       telefone: formCadastro.telefone,
       senha: formCadastro.senha, // Em produção, usar hash!
@@ -188,6 +177,7 @@ export default function AmimBank() {
     const usuarios = usuariosStr ? JSON.parse(usuariosStr) : [];
     usuarios.push(novoUsuario);
     localStorage.setItem('amim_usuarios', JSON.stringify(usuarios));
+    localStorage.setItem(`amim_transacoes_${novoUsuario.id}`, JSON.stringify(TRANSACOES_INICIAIS));
 
     // Auto-login
     localStorage.setItem('amim_usuario_logado', JSON.stringify(novoUsuario));
@@ -228,7 +218,7 @@ export default function AmimBank() {
 
     const usuarios = JSON.parse(usuariosStr);
     const usuarioEncontrado = usuarios.find(
-      u => u.email === formLogin.email && u.senha === formLogin.senha
+      u => u.email === formLogin.email.trim().toLowerCase() && u.senha === formLogin.senha
     );
 
     if (!usuarioEncontrado) {
@@ -293,11 +283,15 @@ export default function AmimBank() {
       // Salvar no localStorage
       localStorage.setItem(`amim_transacoes_${usuarioLogado.id}`, JSON.stringify(novaTransacoes));
       const usuariosStr = localStorage.getItem('amim_usuarios');
-      const usuarios = JSON.parse(usuariosStr);
+      const usuarios = usuariosStr ? JSON.parse(usuariosStr) : [];
       const usuarioAtualizado = usuarios.find(u => u.id === usuarioLogado.id);
-      usuarioAtualizado.saldo = novoSaldo;
+      if (usuarioAtualizado) {
+        usuarioAtualizado.saldo = novoSaldo;
+      }
+      const usuarioComSaldoAtualizado = { ...usuarioLogado, saldo: novoSaldo };
       localStorage.setItem('amim_usuarios', JSON.stringify(usuarios));
-      localStorage.setItem('amim_usuario_logado', JSON.stringify({...usuarioLogado, saldo: novoSaldo}));
+      localStorage.setItem('amim_usuario_logado', JSON.stringify(usuarioComSaldoAtualizado));
+      setUsuarioLogado(usuarioComSaldoAtualizado);
       
       adicionarNotificacao(`Transferência de R$ ${parseFloat(novaTransferencia.valor).toFixed(2)} realizada com sucesso!`, 'sucesso');
       setNovaTransferencia({ nomeRecebedor: '', cpfRecebedor: '', valor: '', descricao: '' });
